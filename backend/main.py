@@ -3,6 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import os, json
 
 import backend.models as models, backend.schemas as schemas
 from backend.database import engine, get_db
@@ -20,6 +21,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# JSON 파일 경로 지정
+JSON_PATH = os.path.join("local_infos", "광주_전라권_관광지.json")
 
 # [CREATE] 게시글 작성
 @app.post("/api/posts", response_model=schemas.PostResponse, status_code=status.HTTP_201_CREATED)
@@ -80,3 +83,23 @@ def delete_post(post_id: int, password: str, db: Session = Depends(get_db)):
     db.delete(db_post)
     db.commit()
     return {"status": "success", "message": "게시글이 삭제되었습니다."}
+
+
+
+@app.get("/api/spots")
+def get_spots():
+    try:
+        with open(JSON_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        # 공공데이터 특유의 구조(response -> body -> items -> item)에 따른 안전한 파싱
+        # 데이터 구조가 다를 경우를 대비해 예외처리를 꼼꼼하게 다듬었습니다.
+        items = data.get("response", {}).get("body", {}).get("items", {}).get("item", [])
+        
+        # 리스트 형태가 아니라 단일 딕셔너리로 들어올 경우를 대비한 방어 코드
+        if isinstance(items, dict):
+            items = [items]
+            
+        return items
+    except Exception as e:
+        return {"error": f"파일을 읽는 중 오류가 발생했습니다: {str(e)}"}
