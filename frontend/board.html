@@ -2,13 +2,27 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>여정: 여행 게시판</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-50 p-10">
   <div class="max-w-4xl mx-auto">
-    <!-- 뒤로가기 버튼 -->
-    <a href="index.html" class="text-sky-600 hover:underline mb-6 inline-block">← 홈으로 돌아가기</a>
+     <!-- [상단] 게시판, 지도 내비게이션 -->
+  <header class="w-full max-w-7xl mx-auto flex justify-center">
+    <nav class="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm px-2 py-1.5 rounded-full flex gap-1">
+      <a href="index.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
+        <i class="fa-solid fa-star mr-2"></i>추천
+      </a>
+      <a href="board.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 bg-slate-900 text-white shadow-sm">
+        <i class="fa-regular fa-clipboard mr-2"></i>게시판
+      </a>
+      <a href="map.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
+        <i class="fa-solid fa-map-location-dot mr-2"></i>지도
+      </a>
+    </nav>
+  </header>
     
     <h1 class="text-3xl font-bold mb-6">여행 추천 게시판</h1>
     
