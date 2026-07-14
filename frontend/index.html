@@ -16,13 +16,16 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased overflow-hidden h-screen flex flex-col justify-between p-6 md:p-10">
 
-  <!-- [상단] 게시판, 지도 내비게이션 -->
+  <!-- [상단] 추천 / 게시판 / 지도 내비게이션 -->
   <header class="w-full max-w-7xl mx-auto flex justify-center">
     <nav class="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm px-2 py-1.5 rounded-full flex gap-1">
-      <a href="#board" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 bg-slate-900 text-white shadow-sm">
+      <a href="index.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 bg-slate-900 text-white shadow-sm">
+        <i class="fa-solid fa-star mr-2"></i>추천
+      </a>
+      <a href="board.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
         <i class="fa-regular fa-clipboard mr-2"></i>게시판
       </a>
-      <a href="#map" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
+      <a href="map.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
         <i class="fa-solid fa-map-location-dot mr-2"></i>지도
       </a>
     </nav>
@@ -43,11 +46,11 @@
         <p class="text-slate-500 text-base mt-2">복잡한 계획은 그만. 몇 가지 질문으로 당신에게 딱 맞는 숨은 여행지를 찾아드려요.</p>
       </div>
 
-      <!-- 성향 테스트 버튼 -->
-      <button class="group bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-sky-500/20 hover:shadow-xl hover:shadow-sky-500/30 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3 text-base">
+      <!-- 성향 테스트 버튼 (링크) -->
+      <a href="favorable.html" class="group inline-flex bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-sky-500/20 hover:shadow-xl hover:shadow-sky-500/30 hover:-translate-y-0.5 transition-all duration-200 items-center gap-3 text-base" role="button">
         <span>내 여행 성향 테스트하기</span>
         <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-      </button>
+      </a>
     </div>
 
     <!-- 우측 이미지 배경 영역 (7칸 차지) -->

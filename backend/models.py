@@ -1,7 +1,7 @@
 # backend/models.py
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from datetime import datetime
-from database import Base
+from backend.database import Base
 
 class Post(Base):
     __tablename__ = "posts"
