@@ -3,36 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>여정: 여행 게시판</title>
+  <title>여정: 여행 추천 게시판</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+    body { font-family: 'Pretendard', sans-serif; }
+    /* 핀터레스트 스타일 그리드 여백 조절 */
+    .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
+  </style>
 </head>
-<body class="bg-slate-50 p-10">
-  <div class="max-w-4xl mx-auto">
-     <!-- [상단] 게시판, 지도 내비게이션 -->
-  <header class="w-full max-w-7xl mx-auto flex justify-center">
+<body class="bg-slate-50 text-slate-800 p-6 md:p-10 min-h-screen">
+
+  <!-- [상단] 와이어프레임의 '홈/게시판/지도' 내비게이션 탭 -->
+  <header class="w-full max-w-7xl mx-auto flex justify-center mb-10">
     <nav class="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm px-2 py-1.5 rounded-full flex gap-1">
-      <a href="index.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
-        <i class="fa-solid fa-star mr-2"></i>추천
-      </a>
-      <a href="board.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 bg-slate-900 text-white shadow-sm">
-        <i class="fa-regular fa-clipboard mr-2"></i>게시판
-      </a>
-      <a href="map.html" class="px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 text-slate-600 hover:bg-slate-100">
-        <i class="fa-solid fa-map-location-dot mr-2"></i>지도
-      </a>
+      <a href="index.html" class="px-6 py-2 rounded-full font-semibold text-sm text-slate-600 hover:bg-slate-100">홈</a>
+      <a href="#" class="px-6 py-2 rounded-full font-semibold text-sm bg-slate-900 text-white shadow-sm">게시판</a>
+      <a href="#map" class="px-6 py-2 rounded-full font-semibold text-sm text-slate-600 hover:bg-slate-100">지도</a>
     </nav>
   </header>
+
+  <!-- [중단] 타이틀 및 핀터레스트 스타일 게시판 리스트 -->
+  <main class="w-full max-w-7xl mx-auto">
+    <h1 class="text-3xl font-extrabold text-slate-900 mb-8 px-2">
+      <i class="fa-solid fa-camera-retro text-sky-500 mr-2"></i>여행 추천 게시판
+    </h1>
     
-    <h1 class="text-3xl font-bold mb-6">여행 추천 게시판</h1>
-    
-    <!-- 게시글 목록 (예시) -->
-    <div class="space-y-4">
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold">여수 밤바다 코스 추천합니다!</h2>
-        <p class="text-slate-500 mt-2">돌산대교 야경이랑 낭만포차는 필수 코스입니다...</p>
+    <!-- 와이어프레임 레이아웃을 재현한 불규칙 그리드 컨테이너 -->
+    <div id="board-grid" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 w-full">
+      <!-- 뱅글뱅글 로딩 표시 (데이터 가져오기 전) -->
+      <div class="col-span-full text-center py-20 text-slate-400">
+        <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+        <p>광주·전라권 숨은 명소를 불러오는 중...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- [팝업] 네모칸 클릭 시 나타나는 상세 글 보기 모달창 -->
+  <div id="detail-modal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+      <!-- 이미지 영역 -->
+      <div class="h-64 sm:h-80 w-full relative bg-slate-900">
+        <img id="modal-img" src="" alt="" class="w-full h-full object-cover">
+        <button onclick="closeModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/70 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <!-- 글 내용 영역 -->
+      <div class="p-6 overflow-y-auto space-y-4">
+        <div>
+          <span id="modal-addr" class="text-xs font-semibold text-sky-600 uppercase tracking-wider">주소 정보</span>
+          <h2 id="modal-title" class="text-2xl font-bold text-slate-900 mt-1">관광지명</h2>
+        </div>
+        <p id="modal-overview" class="text-slate-600 text-sm md:text-base leading-relaxed whitespace-pre-line">
+          상세 설명이 들어가는 곳입니다.
+        </p>
       </div>
     </div>
   </div>
+
+  <!-- 데이터 통신 및 팝업 제어 스크립트 -->
+  <script>
+    let spotData = []; // 백엔드에서 받은 데이터를 저장할 배열
+
+    // 1. 페이지 열리자마자 백엔드 API에서 관광지 정보 수집
+    window.addEventListener('DOMContentLoaded', () => {
+      axios.get('http://127.0.0.1:8000/api/spots')
+        .then(response => {
+          spotData = response.data;
+          renderBoard(spotData);
+        })
+        .catch(error => {
+          console.error("데이터 로드 실패:", error);
+          document.getElementById('board-grid').innerHTML = `
+            <div class='text-center py-20 text-rose-500 font-semibold col-span-full'>
+              <i class="fa-solid fa-circle-exclamation text-3xl mb-2"></i><br>데이터를 불러오지 못했습니다. 백엔드 서버를 확인해 주세요.
+            </div>`;
+        });
+    });
+
+    // 2. 와이어프레임 규격대로 랜덤 높이를 부여해 카드 게시판 렌더링
+    function renderBoard(items) {
+      const grid = document.getElementById('board-grid');
+      grid.innerHTML = ''; // 기존 로딩 인디케이터 제거
+
+      if(items.length === 0 || items.error) {
+        grid.innerHTML = "<p class='text-center text-slate-400 col-span-full py-10'>게시글이 존재하지 않습니다.</p>";
+        return;
+      }
+
+      // 와이어프레임의 크고 작은 네모 박스 느낌을 주기 위한 높이 배열
+      const heightClasses = ['h-48', 'h-64', 'h-80', 'h-56', 'h-72'];
+
+      items.forEach((item, index) => {
+        // 이미지 주소가 없으면 깔끔한 기본 그라데이션 배경 처리
+        const imgSrc = item.firstimage || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500';
+        const randomHeight = heightClasses[index % heightClasses.length];
+
+        const card = document.createElement('div');
+        card.className = `masonry-item group relative ${randomHeight} w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-slate-100`;
+        card.setAttribute('onclick', `openModal(${index})`);
+        
+        card.innerHTML = `
+          <img src="${imgSrc}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4">
+            <h3 class="text-white font-bold text-base md:text-lg line-clamp-1">${item.title}</h3>
+            <p class="text-slate-300 text-xs line-clamp-1 mt-0.5"><i class="fa-solid fa-location-dot text-rose-400 mr-1"></i>${item.addr1 || '전라권 일대'}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 3. 팝업(모달) 열기 함수
+    function openModal(index) {
+      const spot = spotData[index];
+      const defaultImg = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
+      
+      document.getElementById('modal-img').src = spot.firstimage || defaultImg;
+      document.getElementById('modal-title').innerText = spot.title;
+      document.getElementById('modal-addr').innerText = spot.addr1 || '주소 정보 없음';
+      // 개요(overview) 데이터가 없을 경우 주소를 한 번 더 노출하거나 기본 문구 바인딩
+      document.getElementById('modal-overview').innerText = spot.overview || `${spot.title}은(는) 광주 전라권의 아름다운 명소입니다. 상세 설명은 준비 중입니다.`;
+      
+      document.getElementById('detail-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // 뒷배경 스크롤 방지
+    }
+
+    // 4. 팝업(모달) 닫기 함수
+    function closeModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+      document.body.style.overflow = ''; // 스크롤 원복
+    }
+  </script>
 </body>
 </html>
