@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 
-import models, schemas
-from database import engine, get_db
+import backend.models as models, backend.schemas as schemas
+from backend.database import engine, get_db
 
 # 애플리케이션 시작 시 DB 테이블 자동 생성 (Migration 대용)
 models.Base.metadata.create_all(bind=engine)
