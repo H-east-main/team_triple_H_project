@@ -11,5 +11,6 @@ class Post(Base):
     title = Column(String, index=True, nullable=False)
     content = Column(Text, nullable=False)
     password = Column(String, nullable=False)               # 교육 목적의 평문 비밀번호
+    image_url = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)  # 서버 기준 등록 시간
     modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

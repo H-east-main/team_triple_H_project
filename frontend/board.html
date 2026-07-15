@@ -2,141 +2,366 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>여정: 여행 추천 게시판</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
-    body { font-family: 'Pretendard', sans-serif; }
-    /* 핀터레스트 스타일 그리드 여백 조절 */
-    .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
+    @import url(
+      'https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap'
+    );
+
+    body {
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    .masonry-item {
+      break-inside: avoid;
+      margin-bottom: 1.5rem;
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 p-6 md:p-10 min-h-screen">
 
-  <!-- [상단] 와이어프레임의 '홈/게시판/지도' 내비게이션 탭 -->
-  <header class="w-full max-w-7xl mx-auto flex justify-center mb-10">
-    <nav class="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm px-2 py-1.5 rounded-full flex gap-1">
-      <a href="index.html" class="px-6 py-2 rounded-full font-semibold text-sm text-slate-600 hover:bg-slate-100">홈</a>
-      <a href="#" class="px-6 py-2 rounded-full font-semibold text-sm bg-slate-900 text-white shadow-sm">게시판</a>
-      <a href="#map" class="px-6 py-2 rounded-full font-semibold text-sm text-slate-600 hover:bg-slate-100">지도</a>
+<body class="min-h-screen bg-slate-50 p-6 text-slate-800 md:p-10">
+
+  <!-- 상단 메뉴 -->
+  <header class="mx-auto mb-10 flex w-full max-w-7xl justify-center">
+    <nav
+      class="flex gap-1 rounded-full border border-slate-200
+             bg-white/80 px-2 py-1.5 shadow-sm backdrop-blur-md"
+    >
+      <a
+        href="index.html"
+        class="rounded-full px-6 py-2 text-sm font-semibold
+               text-slate-600 hover:bg-slate-100"
+      >
+        홈
+      </a>
+
+      <a
+        href="board.html"
+        class="rounded-full bg-slate-900 px-6 py-2 text-sm
+               font-semibold text-white shadow-sm"
+      >
+        게시판
+      </a>
+
+      <a
+        href="map.html"
+        class="rounded-full px-6 py-2 text-sm font-semibold
+               text-slate-600 hover:bg-slate-100"
+      >
+        지도
+      </a>
     </nav>
   </header>
 
-  <!-- [중단] 타이틀 및 핀터레스트 스타일 게시판 리스트 -->
-  <main class="w-full max-w-7xl mx-auto">
-    <h1 class="text-3xl font-extrabold text-slate-900 mb-8 px-2">
-      <i class="fa-solid fa-camera-retro text-sky-500 mr-2"></i>여행 추천 게시판
-    </h1>
-    
-    <!-- 와이어프레임 레이아웃을 재현한 불규칙 그리드 컨테이너 -->
-    <div id="board-grid" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 w-full">
-      <!-- 뱅글뱅글 로딩 표시 (데이터 가져오기 전) -->
-      <div class="col-span-full text-center py-20 text-slate-400">
-        <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
-        <p>광주·전라권 숨은 명소를 불러오는 중...</p>
+  <!-- 게시판 본문 -->
+  <main class="mx-auto w-full max-w-7xl">
+
+    <div class="mb-8 flex items-center justify-between px-2">
+      <h1 class="text-3xl font-extrabold text-slate-900">
+        <i class="fa-solid fa-camera-retro mr-2 text-sky-500"></i>
+        여행 추천 게시판
+      </h1>
+
+      <button
+        type="button"
+        class="rounded-full bg-sky-500 px-5 py-2.5 text-sm
+               font-semibold text-white shadow-sm transition
+               hover:bg-sky-600"
+      >
+        <i class="fa-solid fa-pen mr-1"></i>
+        글쓰기
+      </button>
+    </div>
+
+    <!-- 게시글 목록 -->
+    <div
+      id="board-grid"
+      class="w-full columns-1 gap-6 sm:columns-2
+             md:columns-3 lg:columns-4"
+    >
+      <div class="py-20 text-center text-slate-400">
+        <i class="fa-solid fa-spinner fa-spin mb-2 text-3xl"></i>
+        <p>게시글을 불러오는 중...</p>
       </div>
     </div>
   </main>
 
-  <!-- [팝업] 네모칸 클릭 시 나타나는 상세 글 보기 모달창 -->
-  <div id="detail-modal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
-      <!-- 이미지 영역 -->
-      <div class="h-64 sm:h-80 w-full relative bg-slate-900">
-        <img id="modal-img" src="" alt="" class="w-full h-full object-cover">
-        <button onclick="closeModal()" class="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/70 transition">
+  <!-- 상세보기 모달 -->
+  <div
+    id="detail-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center
+           bg-slate-950/60 p-4 backdrop-blur-sm"
+  >
+    <div
+      class="flex max-h-[90vh] w-full max-w-2xl flex-col
+             overflow-hidden rounded-2xl border border-slate-100
+             bg-white shadow-2xl"
+    >
+      <!-- 게시글 이미지 -->
+      <div class="relative h-64 w-full bg-slate-200 sm:h-80">
+        <img
+          id="modal-img"
+          src=""
+          alt="게시글 이미지"
+          class="h-full w-full object-cover"
+        >
+
+        <button
+          type="button"
+          onclick="closeModal()"
+          class="absolute right-4 top-4 flex h-10 w-10
+                 items-center justify-center rounded-full bg-black/50
+                 text-white transition hover:bg-black/70"
+        >
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <!-- 글 내용 영역 -->
-      <div class="p-6 overflow-y-auto space-y-4">
+
+      <!-- 게시글 내용 -->
+      <div class="space-y-4 overflow-y-auto p-6">
         <div>
-          <span id="modal-addr" class="text-xs font-semibold text-sky-600 uppercase tracking-wider">주소 정보</span>
-          <h2 id="modal-title" class="text-2xl font-bold text-slate-900 mt-1">관광지명</h2>
+          <span
+            id="modal-category"
+            class="text-xs font-semibold uppercase tracking-wider
+                   text-sky-600"
+          >
+            카테고리
+          </span>
+
+          <h2
+            id="modal-title"
+            class="mt-1 text-2xl font-bold text-slate-900"
+          >
+            게시글 제목
+          </h2>
+
+          <p
+            id="modal-date"
+            class="mt-2 text-xs text-slate-400"
+          >
+          </p>
         </div>
-        <p id="modal-overview" class="text-slate-600 text-sm md:text-base leading-relaxed whitespace-pre-line">
-          상세 설명이 들어가는 곳입니다.
+
+        <p
+          id="modal-content"
+          class="whitespace-pre-line text-sm leading-relaxed
+                 text-slate-600 md:text-base"
+        >
+          게시글 내용
         </p>
       </div>
     </div>
   </div>
 
-  <!-- 데이터 통신 및 팝업 제어 스크립트 -->
   <script>
-    let spotData = []; // 백엔드에서 받은 데이터를 저장할 배열
+    const API_URL = 'http://127.0.0.1:8000/api/posts';
 
-    // 1. 페이지 열리자마자 백엔드 API에서 관광지 정보 수집
-    window.addEventListener('DOMContentLoaded', () => {
-      axios.get('http://127.0.0.1:8000/api/posts')
-        .then(response => {
-          spotData = response.data;
-          renderBoard(spotData);
-        })
-        .catch(error => {
-          console.error("데이터 로드 실패:", error);
-          document.getElementById('board-grid').innerHTML = `
-            <div class='text-center py-20 text-rose-500 font-semibold col-span-full'>
-              <i class="fa-solid fa-circle-exclamation text-3xl mb-2"></i><br>데이터를 불러오지 못했습니다. 백엔드 서버를 확인해 주세요.
-            </div>`;
-        });
-    });
+    const DEFAULT_IMAGE =
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'
+      + '?auto=format&fit=crop&w=1000&q=80';
 
-    // 2. 와이어프레임 규격대로 랜덤 높이를 부여해 카드 게시판 렌더링
-    function renderBoard(items) {
+    let postData = [];
+
+    window.addEventListener('DOMContentLoaded', loadPosts);
+
+    async function loadPosts() {
+      try {
+        const response = await axios.get(API_URL);
+
+        console.log('게시글 응답:', response.data);
+
+        postData = response.data;
+        renderBoard(postData);
+      } catch (error) {
+        console.error('게시글 로드 실패:', error);
+        console.error('백엔드 응답:', error.response?.data);
+
+        const grid = document.getElementById('board-grid');
+
+        grid.innerHTML = `
+          <div class="py-20 text-center font-semibold text-rose-500">
+            <i class="fa-solid fa-circle-exclamation mb-2 text-3xl"></i>
+            <p>게시글을 불러오지 못했습니다.</p>
+            <p class="mt-2 text-sm font-normal text-slate-400">
+              FastAPI 서버가 실행 중인지 확인해 주세요.
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    function renderBoard(posts) {
       const grid = document.getElementById('board-grid');
-      grid.innerHTML = ''; // 기존 로딩 인디케이터 제거
+      grid.innerHTML = '';
 
-      if(items.length === 0 || items.error) {
-        grid.innerHTML = "<p class='text-center text-slate-400 col-span-full py-10'>게시글이 존재하지 않습니다.</p>";
+      if (!Array.isArray(posts) || posts.length === 0) {
+        grid.innerHTML = `
+          <div class="py-20 text-center text-slate-400">
+            <i class="fa-regular fa-folder-open mb-3 text-3xl"></i>
+            <p>등록된 게시글이 없습니다.</p>
+          </div>
+        `;
         return;
       }
 
-      // 와이어프레임의 크고 작은 네모 박스 느낌을 주기 위한 높이 배열
-      const heightClasses = ['h-48', 'h-64', 'h-80', 'h-56', 'h-72'];
+      const heightClasses = [
+        'h-56',
+        'h-72',
+        'h-64',
+        'h-80',
+        'h-60'
+      ];
 
-      items.forEach((item, index) => {
-        // 이미지 주소가 없으면 깔끔한 기본 그라데이션 배경 처리
-        const imgSrc = item.firstimage || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500';
-        const randomHeight = heightClasses[index % heightClasses.length];
+      posts.forEach((post, index) => {
+        const imageUrl = post.image_url || DEFAULT_IMAGE;
+        const heightClass =
+          heightClasses[index % heightClasses.length];
 
-        const card = document.createElement('div');
-        card.className = `masonry-item group relative ${randomHeight} w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-slate-100`;
-        card.setAttribute('onclick', `openModal(${index})`);
-        
+        const card = document.createElement('article');
+
+        card.className = `
+          masonry-item group relative ${heightClass}
+          w-full cursor-pointer overflow-hidden rounded-2xl
+          border border-slate-200 bg-slate-200 shadow-sm
+          transition-all duration-300 hover:-translate-y-1
+          hover:shadow-xl
+        `;
+
+        card.addEventListener('click', () => openModal(index));
+
         card.innerHTML = `
-          <img src="${imgSrc}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4">
-            <h3 class="text-white font-bold text-base md:text-lg line-clamp-1">${item.title}</h3>
-            <p class="text-slate-300 text-xs line-clamp-1 mt-0.5"><i class="fa-solid fa-location-dot text-rose-400 mr-1"></i>${item.addr1 || '전라권 일대'}</p>
+          <img
+            src="${escapeHtml(imageUrl)}"
+            alt="${escapeHtml(post.title)}"
+            class="h-full w-full object-cover
+                   transition-transform duration-500
+                   group-hover:scale-105"
+            onerror="this.src='${DEFAULT_IMAGE}'"
+          >
+
+          <div
+            class="absolute inset-0 flex flex-col justify-end
+                   bg-gradient-to-t from-black/85 via-black/25
+                   to-transparent p-4"
+          >
+            <span class="mb-1 text-xs font-semibold text-sky-300">
+              ${escapeHtml(post.category)}
+            </span>
+
+            <h2
+              class="line-clamp-2 text-base font-bold text-white
+                     md:text-lg"
+            >
+              ${escapeHtml(post.title)}
+            </h2>
+
+            <p class="mt-1 line-clamp-2 text-xs text-slate-300">
+              ${escapeHtml(post.content)}
+            </p>
+
+            <p class="mt-3 text-xs text-slate-400">
+              ${formatDate(post.created_at)}
+            </p>
           </div>
         `;
+
         grid.appendChild(card);
       });
     }
 
-    // 3. 팝업(모달) 열기 함수
     function openModal(index) {
-      const spot = spotData[index];
-      const defaultImg = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
-      
-      document.getElementById('modal-img').src = spot.firstimage || defaultImg;
-      document.getElementById('modal-title').innerText = spot.title;
-      document.getElementById('modal-addr').innerText = spot.addr1 || '주소 정보 없음';
-      // 개요(overview) 데이터가 없을 경우 주소를 한 번 더 노출하거나 기본 문구 바인딩
-      document.getElementById('modal-overview').innerText = spot.overview || `${spot.title}은(는) 광주 전라권의 아름다운 명소입니다. 상세 설명은 준비 중입니다.`;
-      
-      document.getElementById('detail-modal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden'; // 뒷배경 스크롤 방지
+      const post = postData[index];
+
+      if (!post) {
+        return;
+      }
+
+      const modal = document.getElementById('detail-modal');
+      const modalImage = document.getElementById('modal-img');
+
+      modalImage.src = post.image_url || DEFAULT_IMAGE;
+      modalImage.alt = post.title || '게시글 이미지';
+
+      modalImage.onerror = function () {
+        this.src = DEFAULT_IMAGE;
+      };
+
+      document.getElementById('modal-category').innerText =
+        post.category || '광주·전라권';
+
+      document.getElementById('modal-title').innerText =
+        post.title || '제목 없음';
+
+      document.getElementById('modal-content').innerText =
+        post.content || '내용이 없습니다.';
+
+      document.getElementById('modal-date').innerText =
+        formatDate(post.created_at);
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      document.body.style.overflow = 'hidden';
     }
 
-    // 4. 팝업(모달) 닫기 함수
     function closeModal() {
-      document.getElementById('detail-modal').classList.add('hidden');
-      document.body.style.overflow = ''; // 스크롤 원복
+      const modal = document.getElementById('detail-modal');
+
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      document.body.style.overflow = '';
     }
+
+    function formatDate(dateString) {
+      if (!dateString) {
+        return '';
+      }
+
+      const date = new Date(dateString);
+
+      return date.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function escapeHtml(value) {
+      const element = document.createElement('div');
+      element.textContent = value ?? '';
+      return element.innerHTML;
+    }
+
+    document
+      .getElementById('detail-modal')
+      .addEventListener('click', function (event) {
+        if (event.target === this) {
+          closeModal();
+        }
+      });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    });
   </script>
 </body>
 </html>
