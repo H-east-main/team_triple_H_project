@@ -28,6 +28,17 @@ const router = createRouter({
       name: 'map',
       component: MapView,
     },
+    {
+      path: '/board/write',
+      name: 'board-write',
+      component: () => import('../views/BoardWriteView.vue'),
+    },
+    {
+      path: "/board/edit/:id",
+      name: "board-edit",
+      component: () => import("../views/BoardEditView.vue")
+    },
+
   ],
 })
 
