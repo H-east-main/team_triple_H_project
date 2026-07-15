@@ -1,28 +1,67 @@
 # backend/schemas.py
-from pydantic import BaseModel, Field
+
 from datetime import datetime
 from typing import Optional
 
-# 공통 필드 정의
+from pydantic import BaseModel, ConfigDict, Field
+
+
+# 게시글 공통 필드
 class PostBase(BaseModel):
-    category: str = Field(..., example="강원권")
-    title: str = Field(..., max_length=100, example="속초 맛집 추천합니다")
-    content: str = Field(..., example="중앙시장에 가면 닭강정은 꼭 드세요.")
-    image_url: str = Field(..., examples=["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"])
+    category: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        examples=["관광지"],
+    )
 
-# 1. 작성(Create) 요청용 스키마: 비밀번호 필수 필수
+    title: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        examples=["광주 여행지 추천합니다"],
+    )
+
+    content: str = Field(
+        ...,
+        min_length=1,
+        examples=["무등산에 다녀왔습니다."],
+    )
+
+    # 입력하지 않으면 프론트엔드에서 기본 이미지 사용
+    image_url: Optional[str] = Field(
+        default=None,
+        examples=[
+            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+            "?auto=format&fit=crop&w=1200&q=80"
+        ],
+    )
+
+
+# 게시글 작성 요청
 class PostCreate(PostBase):
-    password: str = Field(..., min_length=4, example="1234")
+    password: str = Field(
+        ...,
+        min_length=4,
+        max_length=50,
+        examples=["1234"],
+    )
 
-# 2. 수정(Update) 요청용 스키마: 검증용 비밀번호 포함
+
+# 게시글 수정 요청
 class PostUpdate(PostBase):
-    password: str = Field(..., example="1234")
+    password: str = Field(
+        ...,
+        min_length=4,
+        max_length=50,
+        examples=["1234"],
+    )
 
-# 3. 응답(Response) 반환용 스키마: ★비밀번호(password) 제외 보안 유지
+
+# 게시글 조회 응답
 class PostResponse(PostBase):
     id: int
     created_at: datetime
-    modified_at: datetime
 
-    class Config:
-        from_attributes = True  # SQLAlchemy ORM 객체를 Pydantic이 자동 변환해줌
+    # SQLAlchemy ORM 객체를 Pydantic 응답으로 변환
+    model_config = ConfigDict(from_attributes=True)
