@@ -65,3 +65,59 @@ class PostResponse(PostBase):
 
     # SQLAlchemy ORM 객체를 Pydantic 응답으로 변환
     model_config = ConfigDict(from_attributes=True)
+
+
+# 여행 성향 세부 점수
+class TravelTraits(BaseModel):
+    hotplace: int = 0
+    waiting: int = 0
+    crowd: int = 0
+    planning: int = 0
+    pace: int = 0
+
+
+# 여행 성향 저장 요청
+class TravelProfileCreate(BaseModel):
+    client_id: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        examples=["38c1375c-9ec7-47d0-85fa-55c72aadf29a"],
+    )
+
+    main_type: str = Field(
+        ...,
+        examples=["local"],
+    )
+
+    main_title: str = Field(
+        ...,
+        examples=["로컬 감성 여행가"],
+    )
+
+    traits: TravelTraits
+
+    tags: list[str] = Field(
+        default_factory=list,
+        examples=[
+            [
+                "숨은명소선호",
+                "노웨이팅선호",
+                "한적한분위기",
+                "즉흥형",
+                "한장소집중",
+            ]
+        ],
+    )
+
+
+# 여행 성향 조회 응답
+class TravelProfileResponse(BaseModel):
+    id: int
+    client_id: str
+    main_type: str
+    main_title: str
+    traits: TravelTraits
+    tags: list[str]
+    created_at: datetime
+    modified_at: datetime
