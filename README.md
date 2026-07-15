@@ -42,3 +42,6 @@ project_dir/
             ├── PostList.vue # 게시글 목록 조회 화면
             ├── PostDetail.vue # 게시글 상세 조회 화면
             └── PostForm.vue   # 게시글 작성 및 수정 화면 (수정용 비밀번호 처리 포함)
+
+
+
