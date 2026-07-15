@@ -45,6 +45,11 @@ async function loadPosts() {
   }
 }
 
+function goToEditPage(postId) {
+  closeModal()
+  router.push(`/board/edit/${postId}`)
+}
+
 function openModal(post) {
   selectedPost.value = post
   document.body.style.overflow = 'hidden'
@@ -292,12 +297,13 @@ onBeforeUnmount(() => {
 
           <!-- 추후 수정·삭제 기능을 연결할 영역 -->
           <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
-            <button
-              type="button"
-              class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
-            >
-              수정
-            </button>
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+            @click="goToEditPage(selectedPost.id)"
+          >
+            수정
+          </button>
 
             <button
               type="button"
