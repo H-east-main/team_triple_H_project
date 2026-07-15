@@ -42,3 +42,7 @@ project_dir/
             ├── PostList.vue # 게시글 목록 조회 화면
             ├── PostDetail.vue # 게시글 상세 조회 화면
             └── PostForm.vue   # 게시글 작성 및 수정 화면 (수정용 비밀번호 처리 포함)
+
+## 게시판 
+<img width="1385" height="745" alt="image" src="https://github.com/user-attachments/assets/2d0f2f35-6a24-4d0a-aa55-e4a6def46f75" />
+
