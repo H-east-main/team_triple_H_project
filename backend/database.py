@@ -1,31 +1,56 @@
 # backend/database.py
+
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from pathlib import Path
+
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-load_dotenv()
 
-# .env에서 DB 경로를 읽어오고 없으면 로컬 sqlite 파일 사용
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./community.db")
+# backend 폴더의 절대 경로
+BASE_DIR = Path(__file__).resolve().parent
 
-# 1. Engine 생성: DB와의 물리적 연결 통로
-engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False}  # SQLite 필수 옵션
+# 프로젝트 루트의 .env 로드
+ENV_PATH = BASE_DIR.parent / ".env"
+load_dotenv(ENV_PATH)
+
+# 환경변수가 없으면 backend/community.db 사용
+DEFAULT_DB_PATH = BASE_DIR / "community.db"
+DEFAULT_DATABASE_URL = f"sqlite:///{DEFAULT_DB_PATH.as_posix()}"
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    DEFAULT_DATABASE_URL,
 )
 
-# 2. Session 관리자: 실시간 DB 작업(Tranaction)을 처리하는 단위
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# SQLite에서만 필요한 옵션
+connect_args = {}
 
-# 3. Base 클래스: 이 클래스를 상속받아 데이터베이스 테이블(Model)을 정의함
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+# DB Engine 생성
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+)
+
+# 요청별 DB 세션 생성
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
+
+# SQLAlchemy 모델의 부모 클래스
 Base = declarative_base()
 
-# 4. Dependency Injection (의존성 주입)용 함수
-# API 요청이 들어오면 세션을 열고, 처리가 끝나면 자동으로 닫아줌 (결합도 분리)
+
+# FastAPI Dependency
 def get_db():
     db = SessionLocal()
+
     try:
         yield db
     finally:
