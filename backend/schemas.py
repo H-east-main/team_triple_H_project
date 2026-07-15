@@ -8,6 +8,7 @@ class PostBase(BaseModel):
     category: str = Field(..., example="강원권")
     title: str = Field(..., max_length=100, example="속초 맛집 추천합니다")
     content: str = Field(..., example="중앙시장에 가면 닭강정은 꼭 드세요.")
+    image_url: str = Field(..., examples=["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"])
 
 # 1. 작성(Create) 요청용 스키마: 비밀번호 필수 필수
 class PostCreate(PostBase):
