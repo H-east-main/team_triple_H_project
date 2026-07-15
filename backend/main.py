@@ -87,6 +87,108 @@ def delete_post(post_id: int, password: str, db: Session = Depends(get_db)):
 
 
 
+# 여행 성향 DB 객체를 API 응답 형식으로 변환
+def serialize_travel_profile(db_profile: models.TravelProfile):
+    try:
+        tags = json.loads(db_profile.tags) if db_profile.tags else []
+    except json.JSONDecodeError:
+        tags = []
+
+    return {
+        "id": db_profile.id,
+        "client_id": db_profile.client_id,
+        "main_type": db_profile.main_type,
+        "main_title": db_profile.main_title,
+        "traits": {
+            "hotplace": db_profile.hotplace_score,
+            "waiting": db_profile.waiting_score,
+            "crowd": db_profile.crowd_score,
+            "planning": db_profile.planning_score,
+            "pace": db_profile.pace_score,
+        },
+        "tags": tags,
+        "created_at": db_profile.created_at,
+        "modified_at": db_profile.modified_at,
+    }
+
+
+# [CREATE / UPDATE] 여행 성향 프로필 저장
+@app.post(
+    "/api/profiles",
+    response_model=schemas.TravelProfileResponse,
+)
+def save_travel_profile(
+    profile: schemas.TravelProfileCreate,
+    db: Session = Depends(get_db),
+):
+    db_profile = (
+        db.query(models.TravelProfile)
+        .filter(models.TravelProfile.client_id == profile.client_id)
+        .first()
+    )
+
+    # 같은 브라우저에서 테스트를 다시 수행한 경우 기존 결과 갱신
+    if db_profile:
+        db_profile.main_type = profile.main_type
+        db_profile.main_title = profile.main_title
+        db_profile.hotplace_score = profile.traits.hotplace
+        db_profile.waiting_score = profile.traits.waiting
+        db_profile.crowd_score = profile.traits.crowd
+        db_profile.planning_score = profile.traits.planning
+        db_profile.pace_score = profile.traits.pace
+        db_profile.tags = json.dumps(
+            profile.tags,
+            ensure_ascii=False,
+        )
+
+    # 최초 테스트 결과 저장
+    else:
+        db_profile = models.TravelProfile(
+            client_id=profile.client_id,
+            main_type=profile.main_type,
+            main_title=profile.main_title,
+            hotplace_score=profile.traits.hotplace,
+            waiting_score=profile.traits.waiting,
+            crowd_score=profile.traits.crowd,
+            planning_score=profile.traits.planning,
+            pace_score=profile.traits.pace,
+            tags=json.dumps(
+                profile.tags,
+                ensure_ascii=False,
+            ),
+        )
+
+        db.add(db_profile)
+
+    db.commit()
+    db.refresh(db_profile)
+
+    return serialize_travel_profile(db_profile)
+
+
+# [READ] 익명 사용자 여행 성향 조회
+@app.get(
+    "/api/profiles/{client_id}",
+    response_model=schemas.TravelProfileResponse,
+)
+def read_travel_profile(
+    client_id: str,
+    db: Session = Depends(get_db),
+):
+    db_profile = (
+        db.query(models.TravelProfile)
+        .filter(models.TravelProfile.client_id == client_id)
+        .first()
+    )
+
+    if not db_profile:
+        raise HTTPException(
+            status_code=404,
+            detail="저장된 여행 성향을 찾을 수 없습니다.",
+        )
+
+    return serialize_travel_profile(db_profile)
+
 @app.get("/api/spots")
 def get_spots():
     try:

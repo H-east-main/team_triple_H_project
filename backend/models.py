@@ -57,3 +57,54 @@ class Post(Base):
         onupdate=datetime.utcnow,
         nullable=False,
     )
+    
+
+class TravelProfile(Base):
+    __tablename__ = "travel_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # 로그인 대신 브라우저를 구분하기 위한 익명 ID
+    client_id = Column(
+        String(100),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    # 메인 여행 성향
+    main_type = Column(
+        String(30),
+        nullable=False,
+    )
+
+    main_title = Column(
+        String(100),
+        nullable=False,
+    )
+
+    # 세부 성향 점수
+    hotplace_score = Column(Integer, nullable=False, default=0)
+    waiting_score = Column(Integer, nullable=False, default=0)
+    crowd_score = Column(Integer, nullable=False, default=0)
+    planning_score = Column(Integer, nullable=False, default=0)
+    pace_score = Column(Integer, nullable=False, default=0)
+
+    # 태그 목록을 JSON 문자열로 저장
+    tags = Column(
+        Text,
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    modified_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
