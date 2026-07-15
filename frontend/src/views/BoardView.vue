@@ -18,7 +18,11 @@ const posts = ref([])
 const selectedPost = ref(null)
 
 const isLoading = ref(true)
+const isDeleting = ref(false)
+
 const errorMessage = ref('')
+const deletePassword = ref('')
+const deleteErrorMessage = ref('')
 
 const heightClasses = ['h-56', 'h-72', 'h-64', 'h-80', 'h-60']
 
@@ -28,8 +32,6 @@ async function loadPosts() {
 
   try {
     const response = await axios.get(API_URL)
-
-    console.log('게시글 응답:', response.data)
 
     posts.value = Array.isArray(response.data)
       ? response.data
@@ -45,23 +47,70 @@ async function loadPosts() {
   }
 }
 
-function goToEditPage(postId) {
-  closeModal()
-  router.push(`/board/edit/${postId}`)
-}
-
 function openModal(post) {
   selectedPost.value = post
+  deletePassword.value = ''
+  deleteErrorMessage.value = ''
   document.body.style.overflow = 'hidden'
 }
 
 function closeModal() {
   selectedPost.value = null
+  deletePassword.value = ''
+  deleteErrorMessage.value = ''
   document.body.style.overflow = ''
 }
 
 function goToWritePage() {
   router.push('/board/write')
+}
+
+function goToEditPage(postId) {
+  closeModal()
+  router.push(`/board/edit/${postId}`)
+}
+
+async function deletePost() {
+  if (!selectedPost.value) {
+    return
+  }
+
+  const password = deletePassword.value.trim()
+
+  if (!password) {
+    deleteErrorMessage.value = '삭제용 비밀번호를 입력해 주세요.'
+    return
+  }
+
+  const confirmed = window.confirm('정말 이 게시글을 삭제하시겠습니까?')
+
+  if (!confirmed) {
+    return
+  }
+
+  isDeleting.value = true
+  deleteErrorMessage.value = ''
+
+  try {
+    await axios.delete(`${API_URL}/${selectedPost.value.id}`, {
+      params: {
+        password,
+      },
+    })
+
+    closeModal()
+    await loadPosts()
+    window.alert('게시글이 삭제되었습니다.')
+  } catch (error) {
+    console.error('게시글 삭제 실패:', error)
+    console.error('백엔드 응답:', error.response?.data)
+
+    deleteErrorMessage.value =
+      error.response?.data?.detail ||
+      '게시글 삭제에 실패했습니다.'
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 function formatDate(dateString) {
@@ -90,7 +139,7 @@ function handleImageError(event) {
 }
 
 function handleKeydown(event) {
-  if (event.key === 'Escape' && selectedPost.value) {
+  if (event.key === 'Escape' && selectedPost.value && !isDeleting.value) {
     closeModal()
   }
 }
@@ -108,7 +157,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-screen bg-slate-50 p-6 text-slate-800 md:p-10">
-    <!-- 상단 메뉴 -->
     <header class="mx-auto mb-10 flex w-full max-w-7xl justify-center">
       <nav
         class="flex gap-1 rounded-full border border-slate-200 bg-white/80 px-2 py-1.5 shadow-sm backdrop-blur-md"
@@ -136,7 +184,6 @@ onBeforeUnmount(() => {
       </nav>
     </header>
 
-    <!-- 게시판 본문 -->
     <main class="mx-auto w-full max-w-7xl">
       <div class="mb-8 flex items-center justify-between px-2">
         <h1 class="text-3xl font-extrabold text-slate-900">
@@ -154,7 +201,6 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <!-- 로딩 상태 -->
       <div
         v-if="isLoading"
         class="py-20 text-center text-slate-400"
@@ -163,7 +209,6 @@ onBeforeUnmount(() => {
         <p>게시글을 불러오는 중...</p>
       </div>
 
-      <!-- 오류 상태 -->
       <div
         v-else-if="errorMessage"
         class="py-20 text-center font-semibold text-rose-500"
@@ -185,7 +230,6 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <!-- 빈 게시판 -->
       <div
         v-else-if="posts.length === 0"
         class="py-20 text-center text-slate-400"
@@ -194,7 +238,6 @@ onBeforeUnmount(() => {
         <p>등록된 게시글이 없습니다.</p>
       </div>
 
-      <!-- 게시글 목록 -->
       <div
         v-else
         class="w-full columns-1 gap-6 sm:columns-2 md:columns-3 lg:columns-4"
@@ -240,7 +283,6 @@ onBeforeUnmount(() => {
       </div>
     </main>
 
-    <!-- 상세보기 모달 -->
     <div
       v-if="selectedPost"
       class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
@@ -252,7 +294,6 @@ onBeforeUnmount(() => {
       <div
         class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl"
       >
-        <!-- 게시글 이미지 -->
         <div class="relative h-64 w-full flex-shrink-0 bg-slate-200 sm:h-80">
           <img
             :src="selectedPost.image_url || DEFAULT_IMAGE"
@@ -263,16 +304,16 @@ onBeforeUnmount(() => {
 
           <button
             type="button"
-            class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+            class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="상세보기 닫기"
+            :disabled="isDeleting"
             @click="closeModal"
           >
             <i class="fa-solid fa-xmark text-lg"></i>
           </button>
         </div>
 
-        <!-- 게시글 내용 -->
-        <div class="space-y-4 overflow-y-auto p-6">
+        <div class="space-y-5 overflow-y-auto p-6">
           <div>
             <span
               class="text-xs font-semibold uppercase tracking-wider text-sky-600"
@@ -295,22 +336,65 @@ onBeforeUnmount(() => {
             {{ selectedPost.content || '내용이 없습니다.' }}
           </p>
 
-          <!-- 추후 수정·삭제 기능을 연결할 영역 -->
-          <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
-            @click="goToEditPage(selectedPost.id)"
-          >
-            수정
-          </button>
+          <div class="space-y-4 border-t border-slate-100 pt-5">
+            <div>
+              <label
+                for="deletePassword"
+                class="mb-2 block text-sm font-bold text-slate-700"
+              >
+                삭제용 비밀번호
+              </label>
 
-            <button
-              type="button"
-              class="rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
+              <input
+                id="deletePassword"
+                v-model="deletePassword"
+                type="password"
+                maxlength="50"
+                autocomplete="current-password"
+                placeholder="게시글 작성 시 설정한 비밀번호"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                @keydown.enter.prevent="deletePost"
+              />
+
+              <p class="mt-2 text-xs text-slate-400">
+                수정은 수정 페이지에서 비밀번호를 입력하고, 삭제는 여기에서 확인합니다.
+              </p>
+            </div>
+
+            <div
+              v-if="deleteErrorMessage"
+              class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
             >
-              삭제
-            </button>
+              <i class="fa-solid fa-circle-exclamation mr-2"></i>
+              {{ deleteErrorMessage }}
+            </div>
+
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="isDeleting"
+                @click="goToEditPage(selectedPost.id)"
+              >
+                수정
+              </button>
+
+              <button
+                type="button"
+                class="rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:bg-rose-300"
+                :disabled="isDeleting"
+                @click="deletePost"
+              >
+                <template v-if="isDeleting">
+                  <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+                  삭제 중...
+                </template>
+
+                <template v-else>
+                  삭제
+                </template>
+              </button>
+            </div>
           </div>
         </div>
       </div>
