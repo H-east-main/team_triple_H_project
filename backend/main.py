@@ -64,6 +64,7 @@ def update_post(post_id: int, updated_post: schemas.PostUpdate, db: Session = De
     db_post.title = updated_post.title
     db_post.content = updated_post.content
     db_post.category = updated_post.category
+    db_post.image_url = updated_post.image_url
     
     db.commit()
     db.refresh(db_post)
