@@ -70,7 +70,7 @@
 
     // 1. 페이지 열리자마자 백엔드 API에서 관광지 정보 수집
     window.addEventListener('DOMContentLoaded', () => {
-      axios.get('http://127.0.0.1:8000/api/spots')
+      axios.get('http://127.0.0.1:8000/api/posts')
         .then(response => {
           spotData = response.data;
           renderBoard(spotData);
