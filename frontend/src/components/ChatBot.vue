@@ -12,8 +12,6 @@ const inputText = ref('')
 const isSending = ref(false)
 const errorMessage = ref('')
 const bodyRef = ref(null)
-const useProfile = ref(false)
-const personalizedApplied = ref(false)
 
 function pushUser(text) {
   const item = { id: Date.now(), role: 'user', text, time: new Date().toISOString() }
@@ -145,227 +143,276 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="chatbot-root">
-    <div class="chat-header">
-      <strong>여행 챗봇</strong>
+  <div class="chat-container">
+
+    <div class="header">
+      여행 챗봇
     </div>
 
-    <div class="chat-body" ref="bodyRef">
-      <div v-for="msg in messages" :key="msg.id" :class="['chat-message', msg.role]">
-        <div class="bubble">
-          <p class="text">{{ msg.text }}</p>
-          <time class="time">{{ new Date(msg.time).toLocaleTimeString('ko-KR') }}</time>
+    <div class="body" ref="chatBody">
+
+      <div
+        v-for="(msg,index) in messages"
+        :key="index"
+        :class="['row',msg.role]"
+      >
+        <div :class="['bubble',msg.role]">
+          {{ msg.content }}
         </div>
       </div>
-    </div>
 
-    <!-- Recommendation cards commented out per request
-    <div v-if="searchResults.length" class="cards-container">
-      <div v-for="place in searchResults" :key="place.id" class="card">
-        <img :src="place.image || DEFAULT_IMAGE" alt="place image" class="card-img" />
-        <div class="card-body">
-          <h4 class="card-title">{{ place.title }}</h4>
-          <p class="card-address">{{ place.address }}</p>
-          <p class="card-category">{{ place.category }}</p>
-          <button class="card-btn" @click="() => window.open('#', '_blank')">자세히 보기</button>
+      <div
+        class="row assistant"
+        v-if="loading"
+      >
+        <div class="bubble assistant">
+          응답을 생성 중입니다...
         </div>
       </div>
+
     </div>
-    -->
 
-    <div class="chat-input">
-      <textarea
-        v-model="inputText"
-        @keydown="handleKeydown"
-        placeholder="메시지를 입력하고 Enter로 전송 (Shift+Enter 줄바꿈)"
-        rows="1"
-      ></textarea>
+    <div class="footer">
 
-      <button class="send-btn" :disabled="isSending || !inputText.trim()" @click="send">
-        <span v-if="isSending">로딩...</span>
-        <span v-else>전송</span>
+      <input
+        v-model="question"
+        @keyup.enter="sendMessage"
+        placeholder="메시지를 입력하세요."
+      />
+
+      <button
+        @click="sendMessage"
+        :disabled="loading"
+      >
+        {{ loading ? "로딩..." : "전송" }}
       </button>
+
     </div>
 
-    <div v-if="errorMessage" class="chat-error">{{ errorMessage }}</div>
   </div>
 </template>
 
+<script setup>
+import { ref, nextTick } from "vue";
+import axios from "axios";
+
+const question = ref("");
+
+const loading = ref(false);
+
+const chatBody = ref(null);
+
+const messages = ref([
+  {
+    role: "assistant",
+    content: "안녕하세요! 어디로 떠나고 싶으신가요?"
+  }
+]);
+
+function scrollBottom() {
+
+  nextTick(() => {
+
+    chatBody.value.scrollTop =
+      chatBody.value.scrollHeight;
+
+  });
+
+}
+
+async function sendMessage() {
+
+  if (!question.value.trim()) return;
+
+  const userQuestion = question.value;
+
+  messages.value.push({
+    role: "user",
+    content: userQuestion
+  });
+
+  question.value = "";
+
+  scrollBottom();
+
+  loading.value = true;
+
+  try {
+
+    const res = await axios.post(
+      "http://localhost:8000/chat",
+      {
+        question: userQuestion
+      }
+    );
+
+    messages.value.push({
+      role: "assistant",
+      content: res.data.answer
+    });
+
+  } catch (e) {
+
+    messages.value.push({
+      role: "assistant",
+      content: "서버와 연결할 수 없습니다."
+    });
+
+    console.error(e);
+
+  } finally {
+
+    loading.value = false;
+
+    scrollBottom();
+
+  }
+
+}
+</script>
+
 <style scoped>
-.chatbot-root {
-  width: 100%;
-  max-width: 420px;
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.08);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+
+.chat-container{
+
+  width:420px;
+  height:580px;
+
+  margin:auto;
+
+  display:flex;
+  flex-direction:column;
+
+  border-radius:15px;
+
+  overflow:hidden;
+
+  box-shadow:0 5px 20px rgba(0,0,0,.15);
+
 }
 
-.chat-header {
-  padding: 12px 16px;
-  background: linear-gradient(90deg, #06b6d4, #6366f1);
-  color: white;
-  font-size: 14px;
+.header{
+
+  background:linear-gradient(90deg,#14b8d4,#6366f1);
+
+  color:white;
+
+  padding:15px;
+
+  font-size:20px;
+
+  font-weight:bold;
+
 }
 
-.chat-body {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 320px;
-  overflow: auto;
-  background: linear-gradient(180deg, #f8fafc, #fff);
+.body{
+
+  flex:1;
+
+  padding:15px;
+
+  overflow-y:auto;
+
+  background:#f8fafc;
+
 }
 
-.chat-message {
-  display: flex;
-  width: 100%;
+.row{
+
+  display:flex;
+
+  margin-bottom:15px;
+
 }
 
-.chat-message.user {
-  justify-content: flex-end;
+.row.user{
+
+  justify-content:flex-end;
+
 }
 
-.chat-message.ai {
-  justify-content: flex-start;
+.row.assistant{
+
+  justify-content:flex-start;
+
 }
 
-.bubble {
-  max-width: 78%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  display: inline-flex;
-  flex-direction: column;
-  box-shadow: 0 2px 8px rgba(2,6,23,0.06);
+.bubble{
+
+  max-width:70%;
+
+  padding:12px;
+
+  border-radius:15px;
+
+  white-space:pre-wrap;
+
 }
 
-.chat-message.user .bubble { align-self: flex-end; }
-.chat-message.ai .bubble { align-self: flex-start; }
+.bubble.user{
 
-.chat-message.user .bubble {
-  background: linear-gradient(90deg, #0ea5a4, #6366f1);
-  color: white;
-  border-bottom-right-radius: 6px;
+  color:white;
+
+  background:linear-gradient(90deg,#14b8d4,#6366f1);
+
 }
 
-.chat-message.ai .bubble {
-  background: #f1f5f9;
-  color: #0f172a;
-  border-bottom-left-radius: 6px;
+.bubble.assistant{
+
+  background:white;
+
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+
 }
 
-.text {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 13px;
+.footer{
+
+  display:flex;
+
+  padding:10px;
+
+  border-top:1px solid #ddd;
+
 }
 
-.time {
-  margin-top: 6px;
-  font-size: 11px;
-  opacity: 0.6;
-  align-self: flex-end;
+.footer input{
+
+  flex:1;
+
+  height:42px;
+
+  border:2px solid orange;
+
+  border-radius:10px;
+
+  padding-left:12px;
+
+  outline:none;
+
 }
 
-.chat-input {
-  display: flex;
-  gap: 8px;
-  padding: 10px;
-  border-top: 1px solid rgba(15, 23, 42, 0.04);
-  background: #ffffff;
+.footer button{
+
+  margin-left:10px;
+
+  width:80px;
+
+  border:none;
+
+  background:#9ca3af;
+
+  color:white;
+
+  border-radius:10px;
+
+  cursor:pointer;
+
 }
 
-.chat-input textarea {
-  flex: 1;
-  resize: none;
-  border: 1px solid rgba(15,23,42,0.06);
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  min-height: 38px;
-  background: #fff;
-}
+.footer button:disabled{
 
-.send-btn {
-  background: #0f172a;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
+  cursor:not-allowed;
 
-.send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.chat-error {
-  margin-top: 8px;
-  color: #b91c1c;
-  font-size: 13px;
-  text-align: center;
-}
-
-.cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  padding: 12px;
-  border-top: 1px solid rgba(15,23,42,0.04);
-  background: #fff;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
-  border: 1px solid rgba(15,23,42,0.04);
-}
-
-.card-img {
-  width: 100%;
-  height: 110px;
-  object-fit: cover;
-}
-
-.card-body {
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.card-title {
-  font-size: 14px;
-  margin: 0;
-  font-weight: 700;
-}
-
-.card-address, .card-category {
-  font-size: 12px;
-  color: #475569;
-  margin: 0;
-}
-
-.card-btn {
-  margin-top: 6px;
-  align-self: flex-start;
-  background: #0f172a;
-  color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
 </style>

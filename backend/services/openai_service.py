@@ -16,6 +16,7 @@ errors gracefully and returns an explanatory string in case of failure.
 """
 
 from pathlib import Path
+import re
 import os
 import logging
 from typing import Optional
@@ -195,7 +196,15 @@ class OpenAIService:
 
             # Last resort: stringify the object
             try:
-                return str(resp)
+                # Try to extract a text field from the stringified resp as a fallback
+                s = str(resp)
+                # common patterns: text='...' or "text": "..."
+                m = re.search(r"text\s*=\s*'([\s\S]*?)'", s)
+                if not m:
+                    m = re.search(r'"text"\s*:\s*"([\s\S]*?)"', s)
+                if m:
+                    return m.group(1)
+                return s
             except Exception:
                 return "(empty response)"
 
