@@ -821,8 +821,8 @@ function restartTest() {
             to="/map"
             class="rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-700"
           >
-            추천 장소 보러 가기
-            <i class="fa-solid fa-map-location-dot ml-2"></i>
+            맞춤형 추천 받기
+            <i class="fa-solid fa-robot ml-2"></i>
           </RouterLink>
         </div>
       </section>

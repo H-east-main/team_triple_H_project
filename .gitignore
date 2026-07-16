@@ -26,5 +26,6 @@ Thumbs.db
 # Python cache
 __pycache__/
 *.pyc
+
 *.pyo/backend/.env
 /backend/.env
