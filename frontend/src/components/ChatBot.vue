@@ -12,6 +12,8 @@ const inputText = ref('')
 const isSending = ref(false)
 const errorMessage = ref('')
 const bodyRef = ref(null)
+const useProfile = ref(false)
+const personalizedApplied = ref(false)
 
 function pushUser(text) {
   const item = { id: Date.now(), role: 'user', text, time: new Date().toISOString() }

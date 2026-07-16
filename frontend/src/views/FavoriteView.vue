@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const testStarted = ref(false)
@@ -17,6 +18,7 @@ const API_BASE_URL =
 const isSaving = ref(false)
 const saveError = ref('')
 const isMoving = ref(false)
+const router = useRouter()
 
 const questions = [
   {
@@ -557,6 +559,31 @@ async function calculateResult() {
 function restartTest() {
   startTest()
 }
+
+function goToPersonalizedChat() {
+  const clientId = localStorage.getItem('clientId')
+
+  if (!clientId) {
+    saveError.value =
+      '저장된 여행 성향을 찾지 못했습니다. 테스트를 다시 진행해 주세요.'
+    return
+  }
+
+  sessionStorage.setItem(
+    'pendingChatPrompt',
+    '내 여행 성향에 맞는 광주·전라권 여행지 3곳을 추천해줘. 각 장소가 내 성향과 잘 맞는 이유도 설명해줘.',
+  )
+
+  // 챗봇을 맞춤형 모드로 열기 위한 값
+  sessionStorage.setItem(
+    'pendingChatUseProfile',
+    'true',
+  )
+
+  router.push('/')
+}
+
+
 </script>
 
 <template>
@@ -817,13 +844,15 @@ function restartTest() {
             다시 테스트하기
           </button>
 
-          <RouterLink
-            to="/map"
-            class="rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-700"
+          <button
+            type="button"
+            :disabled="isSaving || !!saveError"
+            class="rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            @click="goToPersonalizedChat"
           >
             맞춤형 추천 받기
             <i class="fa-solid fa-robot ml-2"></i>
-          </RouterLink>
+          </button>
         </div>
       </section>
     </main>
