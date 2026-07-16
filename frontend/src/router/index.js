@@ -29,6 +29,11 @@ const router = createRouter({
       component: MapView,
     },
     {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('../views/ChatView.vue'),
+    },
+    {
       path: '/board/write',
       name: 'board-write',
       component: () => import('../views/BoardWriteView.vue'),

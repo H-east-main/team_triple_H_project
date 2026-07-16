@@ -7,6 +7,13 @@ from contextlib import asynccontextmanager
 from backend.seed import seed_posts
 import os, json
 
+from pydantic import BaseModel
+from fastapi import HTTPException
+
+# Chat orchestration service
+from backend.services.chat_service import ChatService
+from typing import Optional
+
 import backend.models as models, backend.schemas as schemas
 from backend.database import engine, get_db
 
@@ -30,6 +37,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://triple-hhh.netlify.app"],  # 실무 배포 시에는 Netlify URL 주소만 딱 넣어야 해
     allow_credentials=True,
     allow_methods=["*"],
@@ -220,3 +228,81 @@ def get_spots():
         return items
     except Exception as e:
         return {"error": f"파일을 읽는 중 오류가 발생했습니다: {str(e)}"}
+
+
+# Chat endpoint (테스트용, 실제 OpenAI 연동은 아님)
+class ChatRequest(BaseModel):
+    question: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+
+
+# Instantiate ChatService once for reuse
+chat_service = ChatService()
+
+
+class SearchRequest(BaseModel):
+    q: str
+    max: Optional[int] = 10
+
+
+@app.post("/api/search")
+def api_search(req: SearchRequest):
+    """Search local places using the existing TravelSearchService.
+
+    Request body: { "q": "사용자질문", "max": 10 }
+    Response: { "results": [ ... ] }
+
+    This endpoint reuses the `chat_service`'s TravelSearchService instance
+    to avoid reloading JSON files and to keep memory usage stable.
+    """
+    if not req.q or not req.q.strip():
+        raise HTTPException(status_code=400, detail="질문(q)을 입력해 주세요.")
+
+    try:
+        results = chat_service.search_service.search_places(req.q, max_results=req.max or 10)
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat_endpoint(payload: ChatRequest):
+    """Handle chat requests by delegating to ChatService.ask().
+
+    Returns JSON `{ "answer": str }` on success. On internal errors
+    raises `HTTPException(status_code=500)` with a short detail message.
+    """
+    # Delegate to ChatService.ask() to handle business logic and LLM integration.
+    try:
+        answer = chat_service.ask(payload.question)
+        return {"answer": answer}
+    except Exception as e:
+        # Convert internal errors to HTTP 500 responses for the client
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/api/openai/status')
+def openai_status():
+    """Return OpenAI availability status for quick testing.
+
+    - `available`: True if an OpenAI client was successfully created.
+    - `has_api_key`: True if an API key was found in environment/.env.
+    - `message`: short human-readable status.
+    """
+    try:
+        svc = OpenAIService()
+        has_key = bool(svc.api_key)
+        client_ok = svc.client is not None
+        if client_ok and has_key:
+            msg = 'OK'
+        elif not client_ok:
+            msg = 'SDK missing or client init failed'
+        else:
+            msg = 'API key missing'
+
+        return {"available": client_ok, "has_api_key": has_key, "message": msg}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,18 +1,14 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const chatMessage = ref('')
+const router = useRouter()
 
 function submitChat() {
   const message = chatMessage.value.trim()
-
-  if (!message) {
-    return
-  }
-
-  console.log('챗봇 질문:', message)
-
-  // 추후 FastAPI POST /api/chat 요청을 이곳에 구현
+  if (!message) return
+  router.push({ name: 'chat', query: { q: message } })
   chatMessage.value = ''
 }
 </script>
@@ -121,15 +117,14 @@ function submitChat() {
       </section>
     </main>
 
-    <!-- 챗봇 입력창 -->
+
+    <!-- 챗봇 입력창 (원상 복구) -->
     <footer class="w-full max-w-5xl mx-auto">
       <form
         class="bg-white border border-slate-200 shadow-xl rounded-2xl p-2.5 flex items-center gap-3 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition-all duration-200"
         @submit.prevent="submitChat"
       >
-        <div
-          class="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 flex-shrink-0"
-        >
+        <div class="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 flex-shrink-0">
           <i class="fa-solid fa-robot text-lg"></i>
         </div>
 
@@ -140,11 +135,7 @@ function submitChat() {
           class="w-full bg-transparent text-sm md:text-base text-slate-800 placeholder-slate-400 focus:outline-none px-1"
         />
 
-        <button
-          type="submit"
-          class="bg-slate-900 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors flex-shrink-0"
-          aria-label="질문 전송"
-        >
+        <button type="submit" class="bg-slate-900 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors flex-shrink-0" aria-label="질문 전송">
           <i class="fa-solid fa-paper-plane text-sm"></i>
         </button>
       </form>
