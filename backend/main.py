@@ -3,20 +3,33 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+from contextlib import asynccontextmanager
+from backend.seed import seed_posts
 import os, json
 
 import backend.models as models, backend.schemas as schemas
 from backend.database import engine, get_db
 
-# 애플리케이션 시작 시 DB 테이블 자동 생성 (Migration 대용)
-models.Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # DB 테이블 생성
+    models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Anonymous Region Community API")
+    # 게시글이 없으면 더미 데이터 자동 추가
+    seed_posts()
+
+    yield
+
+
+app = FastAPI(
+    title="Anonymous Region Community API",
+    lifespan=lifespan,
+)
 
 # 프론트엔드(Vue.js) 연동을 위한 CORS 허용
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 실무 배포 시에는 Netlify URL 주소만 딱 넣어야 해
+    allow_origins=["https://triple-hhh.netlify.app/"],  # 실무 배포 시에는 Netlify URL 주소만 딱 넣어야 해
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
