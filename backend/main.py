@@ -29,7 +29,8 @@ app = FastAPI(
 # 프론트엔드(Vue.js) 연동을 위한 CORS 허용
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://triple-hhh.netlify.app/"],  # 실무 배포 시에는 Netlify URL 주소만 딱 넣어야 해
+    allow_origins=["http://localhost:5173",
+    "https://triple-hhh.netlify.app"],  # 실무 배포 시에는 Netlify URL 주소만 딱 넣어야 해
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

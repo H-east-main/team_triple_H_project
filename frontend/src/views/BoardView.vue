@@ -27,6 +27,9 @@ const deleteErrorMessage = ref('')
 const heightClasses = ['h-56', 'h-72', 'h-64', 'h-80', 'h-60']
 
 async function loadPosts() {
+
+console.log(import.meta.env.VITE_API_BASE_URL)
+
   isLoading.value = true
   errorMessage.value = ''
 
