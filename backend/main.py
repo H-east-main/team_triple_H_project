@@ -237,6 +237,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
+    places: list[dict] | None = None
 
 
 # Instantiate ChatService once for reuse
@@ -277,8 +278,16 @@ def chat_endpoint(payload: ChatRequest):
     """
     # Delegate to ChatService.ask() to handle business logic and LLM integration.
     try:
+        # 1) Get local search results (to present alongside the LLM answer)
+        try:
+            places = chat_service.search_service.search_places(payload.question, max_results=10)
+        except Exception:
+            places = []
+
+        # 2) Get answer from ChatService (business logic + LLM)
         answer = chat_service.ask(payload.question)
-        return {"answer": answer}
+
+        return {"answer": answer, "places": places}
     except Exception as e:
         # Convert internal errors to HTTP 500 responses for the client
         raise HTTPException(status_code=500, detail=str(e))
