@@ -508,9 +508,9 @@ modified_at
 
 | 서비스 | URL |
 |---|---|
-| Frontend | 배포 후 Netlify URL 작성 |
-| Backend | 배포 후 Render URL 작성 |
-| API Docs | Render 백엔드 URL 뒤 `/docs` |
+| Frontend | https://team-triple-h-project.onrender.com/ |
+| Backend | https://triple-hhh.netlify.app/ |
+| API Docs | https://team-triple-h-project.onrender.com//docs |
 
 ---
 
@@ -518,10 +518,9 @@ modified_at
 
 | 이름 | 역할 | 담당 기능 |
 |---|---|---|
-| 팀원 1 | Frontend | 담당 기능 작성 |
-| 한기헌 | Frontend / Backend | 여행 성향 테스트, 성향 저장 API, 맞춤 추천 프로필 |
-| 팀원 3 | Backend | 담당 기능 작성 |
-| 팀원 4 | AI / Data | 담당 기능 작성 |
+| 한동현 | Frontend / Backend | 챗봇 기반 맞춤형 추천 |
+| 한기헌 | Frontend / Backend | 여행 성향 테스트 |
+| 한은진 | Frontend / Backend | 게시판 기능, 지도 시각화 |
 
 ---
 
